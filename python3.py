@@ -172,11 +172,44 @@ if len(ml) >= 40 and ml["Target"].nunique() == 2:
                                            class_weight="balanced", n_jobs=-1)
         classifier.fit(train[features], train["Target"])
         accuracy = classifier.score(test[features], test["Target"])
-        signal = int(classifier.predict(ml[features].tail(1))[0])
-        col_x, col_y = st.columns(2)
-        col_x.metric("Random Forest direction signal", "UP / bullish" if signal else "DOWN / bearish")
-        col_y.metric("Chronological holdout accuracy", f"{accuracy:.1%}")
-        st.caption("Historical holdout performance changes over time. Directional signal is not a recommendation.")
+        latest_features = ml[features].tail(1)
+        signal = int(classifier.predict(latest_features)[0])
+        probabilities = classifier.predict_proba(latest_features)[0]
+        classes = list(classifier.classes_)
+        bullish_probability = float(probabilities[classes.index(1)]) if 1 in classes else 0.0
+        bearish_probability = float(probabilities[classes.index(0)]) if 0 in classes else 0.0
+
+        # Combine model direction with simple trend/RSI filters to avoid overclaiming.
+        latest_close = last_valid(data["Close"])
+        latest_ma20 = last_valid(data["MA20"])
+        latest_rsi = last_valid(data["RSI"])
+        if signal == 1 and latest_close > latest_ma20 and latest_rsi < 70:
+            trade_signal = "BUY"
+            signal_note = "Model bullish + price above MA20 + RSI below 70"
+            signal_confidence = bullish_probability
+        elif signal == 0 and latest_close < latest_ma20 and latest_rsi > 30:
+            trade_signal = "SELL"
+            signal_note = "Model bearish + price below MA20 + RSI above 30"
+            signal_confidence = bearish_probability
+        else:
+            trade_signal = "HOLD"
+            signal_note = "Model and technical filters do not align clearly"
+            signal_confidence = max(bullish_probability, bearish_probability)
+
+        st.subheader("📊 Buy / Sell / Hold signal")
+        signal_color = {"BUY": "#20c997", "SELL": "#ff5c7a", "HOLD": "#f0b429"}[trade_signal]
+        st.markdown(
+            f'<div style="padding:18px;border-radius:14px;border:1px solid {signal_color};'
+            f'background:rgba(16,29,48,.85);text-align:center">'
+            f'<div style="font-size:30px;font-weight:800;color:{signal_color}">{trade_signal}</div>'
+            f'<div style="font-size:16px;color:#dbe7f7">{signal_note}</div></div>',
+            unsafe_allow_html=True
+        )
+        sig1, sig2, sig3 = st.columns(3)
+        sig1.metric("Model probability (signal class)", f"{signal_confidence:.1%}")
+        sig2.metric("Bullish probability", f"{bullish_probability:.1%}")
+        sig3.metric("Chronological holdout accuracy", f"{accuracy:.1%}")
+        st.caption("Signals are rule-based educational estimates, not financial advice or guaranteed predictions.")
     else:
         st.info("Classifier skipped: training data needs both classes and a non-empty holdout.")
 else:
