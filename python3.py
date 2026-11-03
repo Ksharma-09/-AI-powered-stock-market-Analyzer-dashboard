@@ -14,7 +14,7 @@ from datetime import datetime
 #         page setup
 #================================
 st.set_page_config(page_title="stock Market Dashboard",layout="wide")
-st_autorefresh(interval=60000,key="datarefresh")
+st_autorefresh(interval=60000, key="datarefresh")
 
 time = datetime.now().strftime("%H:%M:%S")
 
@@ -104,14 +104,14 @@ ticker=st.sidebar.selectbox("select stock",list(stocks.keys()),format_func=lambd
 #         side bar
 #================================
 
-data=yf.download(ticker,period="6mo",interval="1h",progress=False,auto_adjust=False)
+data=yf.download(ticker, period="6mo", interval="1h", progress=False, auto_adjust=False)
 if isinstance(data.columns,pd.MultiIndex):
     data.columns=data.columns.get_level_values(0)
 if data.empty:
     st.error("No Stock Data Found")
     st.stop()
     
-current_price=float(data["Close"].iloc[-1])
+current_price=float(data["Close"].dropna().iloc[-1])
 
 #================================
 #         INVESTMENT CALCULATOR
@@ -142,15 +142,15 @@ Compare=st.sidebar.multiselect(
 #================================
 #         RSI INDICATOR
 #================================
-rsi_indicator=RSIIndicator(close=data["Close"].squeeze(),window=14)
+rsi_indicator=RSIIndicator(close=data["Close"].squeeze(), window=14)
 data["RSI"]=rsi_indicator.rsi()
 #================================
 #         kpi card
 #================================
 col1,col2,col3,col4=st.columns(4)
 col1.metric("current price",round(data["Close"].iloc[-1],2))
-col2.metric("day High",round(data["High"].max(),2))
-col3.metric("Day low",round(data["Low"].min(),2))
+col2.metric("Period High",round(data["High"].max(),2))
+col3.metric("Period Low",round(data["Low"].min(),2))
 col4.metric("Volume",int(data["Volume"].iloc[-1]))
 
 #================================
@@ -303,7 +303,7 @@ with col2:
         line=dict(color="#c084fc",width=2),
         name="RSI"))
     rsi_fig.add_hline(y=70,line_dash="dash",line_color="red",annotation_text="Overbought",annotation_position="top right")
-    rsi_fig.add_hline(y=30,line_dash="dash",line_color="green",annotation_text="Oversold",annotation_position="top left")
+    rsi_fig.add_hline(y=30, line_dash="dash", line_color="green", annotation_text="Oversold", annotation_position="top left")
     rsi_fig.update_layout(template="plotly_dark",height=420,margin=dict(l=10,r=10,t=40,b=10))
     st.plotly_chart(rsi_fig,use_container_width=True)
 #================================
@@ -440,7 +440,7 @@ if Compare:
         yaxis=dict(title_font=dict(size=22),tickfont=dict(size=18)),
         hoverlabel=dict(font_size=20,font_family="Arial Black"))
 
-    st.plotly_chart(fig_Compare, use_container_width=True)
+    if fig_Compare.data:\n        st.plotly_chart(fig_Compare, use_container_width=True)\n    else:\n        st.info("No comparison data is currently available.")
 #================================
 #         portfolio summary
 #================================
