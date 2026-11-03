@@ -104,7 +104,7 @@ ticker=st.sidebar.selectbox("select stock",list(stocks.keys()),format_func=lambd
 #         side bar
 #================================
 
-data=yf.download(ticker,period="6mo",interval="1h")
+data=yf.download(ticker,period="6mo",interval="1h",progress=False,auto_adjust=False)
 if isinstance(data.columns,pd.MultiIndex):
     data.columns=data.columns.get_level_values(0)
 if data.empty:
@@ -136,7 +136,7 @@ else:
 #================================
 st.sidebar.subheader("Compare Stock")
 Compare=st.sidebar.multiselect(
-    "Select Stocks",["AAPL","TSLA","GOOGl","MSFT"]
+    "Select Stocks",["AAPL","TSLA","GOOGL","MSFT"]
 )
 
 #================================
@@ -304,7 +304,7 @@ with col2:
         name="RSI"))
     rsi_fig.add_hline(y=70,line_dash="dash",line_color="red",annotation_text="Overbought",annotation_position="top right")
     rsi_fig.add_hline(y=30,line_dash="dash",line_color="green",annotation_text="Oversold",annotation_position="top left")
-    fig.update_layout(template="plotly_dark",height=420,margin=dict(l=10,r=10,t=40,b=10))
+    rsi_fig.update_layout(template="plotly_dark",height=420,margin=dict(l=10,r=10,t=40,b=10))
     st.plotly_chart(rsi_fig,use_container_width=True)
 #================================
 #         ai prediction
@@ -405,7 +405,7 @@ if Compare:
     for i, stock in enumerate(Compare):
 
         # download data
-        df = yf.download(stock, period="1d", interval="1m")
+        df = yf.download(stock, period="1d", interval="1m", progress=False, auto_adjust=False)\n        if isinstance(df.columns, pd.MultiIndex):\n            df.columns = df.columns.get_level_values(0)\n        if df.empty or "Close" not in df.columns:\n            st.warning(f"No intraday data available for {stock}.")\n            continue
 
         # cleaning
         df = df.dropna()
@@ -421,7 +421,7 @@ if Compare:
                 y=df["Close"],
                 mode="lines",
                 name=stock,
-                line=dict(width=7, color=colors[i % len(colors)]),
+                line=dict(width=3, color=colors[i % len(colors)]),
                 marker=dict(size=10)
             ))
         
@@ -446,7 +446,7 @@ if Compare:
 #================================
 
 portfolio=pd.DataFrame({
-    "stock":["AAPL","TSLA","GOOGLE"],
+    "stock":["AAPL","TSLA","GOOGL"],
     "Quantity":[10,5,6],
     "Price":[170,240,130]  
      })
