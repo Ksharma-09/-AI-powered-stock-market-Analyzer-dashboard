@@ -1,6 +1,5 @@
 # AI-Powered Stock Market Analyzer Dashboard
-
-Interactive Streamlit dashboard for market-data exploration using Yahoo Finance data, Plotly charts, technical indicators, simple regression, and a Random Forest direction classifier.
+An interactive AI-powered Stock Market Analytics Dashboard built with Python, Streamlit, and Machine Learning. Features live market data visualization, technical indicators (MA & RSI), Random Forest-based trend prediction, stock comparison, portfolio analysis, and historical performance evaluation using annualized returns, volatility, Sharpe ratio, and maximum drawdown.
 
 ## Features
 - Historical OHLC price chart with 20/50-day moving averages
