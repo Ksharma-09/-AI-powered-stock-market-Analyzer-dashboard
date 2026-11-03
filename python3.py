@@ -405,7 +405,12 @@ if Compare:
     for i, stock in enumerate(Compare):
 
         # download data
-        df = yf.download(stock, period="1d", interval="1m", progress=False, auto_adjust=False)\n        if isinstance(df.columns, pd.MultiIndex):\n            df.columns = df.columns.get_level_values(0)\n        if df.empty or "Close" not in df.columns:\n            st.warning(f"No intraday data available for {stock}.")\n            continue
+        df = yf.download(stock, period="1d", interval="1m", progress=False, auto_adjust=False)
+        if isinstance(df.columns, pd.MultiIndex):
+            df.columns = df.columns.get_level_values(0)
+        if df.empty or "Close" not in df.columns:
+            st.warning(f"No intraday data available for {stock}.")
+            continue
 
         # cleaning
         df = df.dropna()
@@ -440,7 +445,10 @@ if Compare:
         yaxis=dict(title_font=dict(size=22),tickfont=dict(size=18)),
         hoverlabel=dict(font_size=20,font_family="Arial Black"))
 
-    if fig_Compare.data:\n        st.plotly_chart(fig_Compare, use_container_width=True)\n    else:\n        st.info("No comparison data is currently available.")
+    if fig_Compare.data:
+        st.plotly_chart(fig_Compare, use_container_width=True)
+    else:
+        st.info("No comparison data is currently available.")
 #================================
 #         portfolio summary
 #================================
