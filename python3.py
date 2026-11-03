@@ -226,6 +226,23 @@ elif rsi_value <= 30:
 else:
     st.info(f"RSI {rsi_value:.1f}: neutral range")
 
+# Descriptive buy-and-hold diagnostics for the selected historical window.
+returns = close.pct_change().replace([np.inf, -np.inf], np.nan).dropna()
+if len(returns) >= 2:
+    st.subheader("📉 Historical risk & return profile")
+    cumulative = (1 + returns).cumprod()
+    running_peak = cumulative.cummax()
+    drawdown = cumulative / running_peak - 1
+    annualized_return = float(cumulative.iloc[-1] ** (252 / len(returns)) - 1) if cumulative.iloc[-1] > 0 else np.nan
+    annualized_volatility = float(returns.std(ddof=1) * np.sqrt(252)) if len(returns) > 1 else np.nan
+    sharpe = annualized_return / annualized_volatility if annualized_volatility > 0 else np.nan
+    risk1, risk2, risk3 = st.columns(3)
+    risk1.metric("Annualized historical return", f"{annualized_return:.2%}" if np.isfinite(annualized_return) else "N/A")
+    risk2.metric("Annualized volatility", f"{annualized_volatility:.2%}" if np.isfinite(annualized_volatility) else "N/A")
+    risk3.metric("Maximum drawdown", f"{float(drawdown.min()):.2%}")
+    st.metric("Historical Sharpe ratio (rf = 0)", f"{sharpe:.2f}" if np.isfinite(sharpe) else "N/A")
+    st.caption("Descriptive buy-and-hold metrics for the selected period, annualized using 252 trading days. Not a forecast; Sharpe assumes zero risk-free rate.")
+
 st.subheader("Compare stocks")
 selected = st.multiselect("Choose symbols to compare", TICKERS,
                           default=[ticker, "MSFT"] if ticker != "MSFT" else ["AAPL", "MSFT"])
